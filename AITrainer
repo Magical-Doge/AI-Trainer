@@ -1,0 +1,167 @@
+# @describe: This is a project of AI trainer. Learned from @murtaza's workshop.
+#
+# @Author: Magical-Doge
+#
+# @Personal URL: Https://github.com/Magical-Doge, if you like plz pity me for a ★star!!
+#
+# @Environments require:
+#
+# Package               Version
+# --------------------- ---------
+# python                3.7.x
+# opencv-contrib-python 4.5.5.62
+# mediapipe             0.8.9.1
+# numpy                 1.21.5
+#
+#
+# !! ATTENTION !! this code for learning and communication, follow MIT open source protocol
+
+import cv2
+import time
+import numpy as np
+import HandTrackingModule as HTM
+import PoseEstimationModule as PEM
+
+
+cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+cap.set(3, 1280)
+cap.set(4, 720)
+
+cTime = 0
+pTime = 0
+
+handDetector = HTM.handDetector()
+poseDetector = PEM.PoseDetector()
+
+fingerTop = [8, 12, 16, 20]
+cnt1 = 0
+cnt2 = 0
+dir = 0
+count = 0
+
+while True:
+    success, img = cap.read()
+
+
+    handDetector.findHands(img)
+    lmList = handDetector.findLandmark(img)
+
+    if len(lmList) != 0:
+        fingers = []
+        # Thumb
+        if lmList[4][1] < lmList[5][1]:
+            fingers.append(0)
+        else:
+            fingers.append(1)
+
+        for id in fingerTop:
+            if lmList[id][2] < lmList[id-2][2]:
+                fingers.append(1)
+            else:
+                fingers.append(0)
+
+        print(fingers)
+
+        if fingers == [0, 1, 0, 0, 0]:
+            cnt1 = cnt1+1
+            print(cnt1)
+            if cnt1 == 30:
+                break
+        if fingers == [0, 1, 1, 0, 0]:
+            cnt2 = cnt2+1
+            print(cnt2)
+            if cnt2 == 30:
+                break
+
+
+    cTime = time.time()
+    fps = 1/(cTime - pTime)
+    pTime = cTime
+    cv2.putText(img, f'FPS:{int(fps)}', (20, 40), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 0), 2)
+
+    cv2.putText(img, f'Please select a mode, 1 is Weightlifting', (200, 200), cv2.FONT_HERSHEY_SIMPLEX,1,(0,0,255),2)
+    cv2.putText(img, f'                      2 is Standard push ups', (220, 230), cv2.FONT_HERSHEY_SIMPLEX,1,(0,0,255),2)
+
+    cv2.imshow('Webcam', img)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+
+
+print('mod switch loop finish')
+if fingers == [0, 1, 0, 0, 0]:
+    while True:
+        success, img = cap.read()
+
+
+        poseDetector.findPose(img)
+        lmList = poseDetector.findLandmark(img)
+        angle = poseDetector.findAngle(img, 11, 13, 15)
+
+        per = np.interp(angle, (90, 180), (0, 100))
+        if per == 100:
+            if dir == 0:
+                count += 0.5
+                dir = 1
+        if per == 0:
+            if dir == 1:
+                count += 0.5
+                dir = 0
+        cv2.putText(img, f'num:{int(count)}', (20, 70), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 0), 2)
+
+
+        cTime = time.time()
+        fps = 1/(cTime - pTime)
+        pTime = cTime
+        cv2.putText(img, f'FPS:{int(fps)}', (20, 40), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 0), 2)
+
+        cv2.putText(img, f'Weightlifting Mode Activated', (300, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+
+        cv2.imshow('Webcam', img)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+elif fingers == [0, 1, 1, 0, 0]:
+    while True:
+        success, img = cap.read()
+
+
+        poseDetector.findPose(img)
+        lmList = poseDetector.findLandmark(img)
+        angle = poseDetector.findAngle(img, 12, 14, 16)
+
+        per = np.interp(angle, (45, 180), (0, 100))
+        if per == 100:
+            if dir == 0:
+                count += 0.5
+                dir = 1
+        if per == 0:
+            if dir == 1:
+                count += 0.5
+                dir = 0
+        cv2.putText(img, f'num:{int(count)}', (20, 70), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 0), 2)
+
+
+        cTime = time.time()
+        fps = 1 / (cTime - pTime)
+        pTime = cTime
+        cv2.putText(img, f'FPS:{int(fps)}', (20, 40), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 0), 2)
+
+        cv2.putText(img, f'Standard push-ups Mode Activated', (300, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+
+        cv2.imshow('Webcam', img)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+
+
+###################################################################################################
+#------------------------------    Rectify Log    ------------------------------------------------#
+###################################################################################################
+# v0  ---   construct a frame of mode switch method
+#     ---   rectify camera's fps to 60hz, size to 1280x720, solved webcam's view dark problem
+#
+#
+#
+#
+#
+#
