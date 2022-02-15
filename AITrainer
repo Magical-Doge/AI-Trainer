@@ -19,6 +19,7 @@
 import cv2
 import time
 import numpy as np
+import MusicPlayer as mp
 import HandTrackingModule as HTM
 import PoseEstimationModule as PEM
 
@@ -30,12 +31,14 @@ cap.set(4, 720)
 cTime = 0
 pTime = 0
 
-handDetector = HTM.handDetector()
+mplayer = mp.Musicplayer()
+handDetector = HTM.handDetector(detectionCon=0.7)
 poseDetector = PEM.PoseDetector()
 
+
 fingerTop = [8, 12, 16, 20]
-cnt1 = 0
-cnt2 = 0
+cnt1, cnt2, cnt3 = 0, 0, 0
+
 dir = 0
 count = 0
 
@@ -66,12 +69,131 @@ while True:
             cnt1 = cnt1+1
             print(cnt1)
             if cnt1 == 30:
-                break
-        if fingers == [0, 1, 1, 0, 0]:
+                cnt1 = 0
+                while True:
+                    success, img = cap.read()
+
+                    poseDetector.findPose(img)
+                    lmList = poseDetector.findLandmark(img)
+                    angle = poseDetector.findAngle(img, 11, 13, 15)
+
+                    per = np.interp(angle, (90, 180), (0, 100))
+                    if per == 100:
+                        if dir == 0:
+                            count += 0.5
+                            dir = 1
+                    if per == 0:
+                        if dir == 1:
+                            count += 0.5
+                            dir = 0
+                    cv2.putText(img, f'num:{int(count)}', (20, 70), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 0), 2)
+
+                    cTime = time.time()
+                    fps = 1 / (cTime - pTime)
+                    pTime = cTime
+                    cv2.putText(img, f'FPS:{int(fps)}', (20, 40), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 0), 2)
+
+                    cv2.putText(img, f'Weightlifting Mode Activated', (300, 50), cv2.FONT_HERSHEY_SIMPLEX, 1,
+                                (0, 255, 0), 2)
+
+                    cv2.imshow('Webcam', img)
+                    if cv2.waitKey(1) & 0xFF == ord('q'):
+                        break
+        elif fingers == [0, 1, 1, 0, 0]:
             cnt2 = cnt2+1
             print(cnt2)
             if cnt2 == 30:
-                break
+                cnt2 = 0
+                while True:
+                    success, img = cap.read()
+
+                    poseDetector.findPose(img)
+                    lmList = poseDetector.findLandmark(img)
+                    angle = poseDetector.findAngle(img, 12, 14, 16)
+
+                    per = np.interp(angle, (45, 180), (0, 100))
+                    if per == 100:
+                        if dir == 0:
+                            count += 0.5
+                            dir = 1
+                    if per == 0:
+                        if dir == 1:
+                            count += 0.5
+                            dir = 0
+                    cv2.putText(img, f'num:{int(count)}', (20, 70), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 0), 2)
+
+                    cTime = time.time()
+                    fps = 1 / (cTime - pTime)
+                    pTime = cTime
+                    cv2.putText(img, f'FPS:{int(fps)}', (20, 40), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 0), 2)
+
+                    cv2.putText(img, f'Standard push-ups Mode Activated', (300, 50), cv2.FONT_HERSHEY_SIMPLEX, 1,
+                                (0, 255, 0), 2)
+
+                    cv2.imshow('Webcam', img)
+                    if cv2.waitKey(1) & 0xFF == ord('q'):
+                        break
+        elif fingers == [1, 0, 0, 0, 0]:
+            cnt3 = cnt3+1
+            if cnt3 == 30:
+                cnt3 = 0
+                while True:
+                    success, img = cap.read()
+
+                    handDetector.findHands(img)
+                    mlmList = handDetector.findLandmark(img)
+
+                    if len(mlmList) != 0:
+                        mfingers = []
+                        # Thumb
+                        if mlmList[4][1] < mlmList[5][1]:
+                            mfingers.append(0)
+                        else:
+                            mfingers.append(1)
+
+                        for id in fingerTop:
+                            if mlmList[id][2] < mlmList[id - 2][2]:
+                                mfingers.append(1)
+                            else:
+                                mfingers.append(0)
+
+                        if mfingers == [0,1,0,0,0]:
+                            cnt1 = cnt1+1
+                            if cnt1 == 30:
+                                cnt1 = 0
+                                mplayer.music_play()
+                                break
+                        if mfingers == [0,1,1,0,0]:
+                            cnt2 = cnt2+1
+                            if cnt2 == 30:
+                                cnt2 = 0
+                                mplayer.pause_music()
+                                break
+                        if mfingers == [0,1,1,1,0]:
+                            cnt3 = cnt3+1
+                            if cnt3 == 30:
+                                cnt3 = 0
+                                mplayer.stop_music()
+                                break
+
+
+
+
+                    cTime = time.time()
+                    fps = 1 / (cTime - pTime)
+                    pTime = cTime
+                    cv2.putText(img, f'FPS:{int(fps)}', (20, 40), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 0), 2)
+
+                    cv2.putText(img, f'Music player Mode', (300, 50), cv2.FONT_HERSHEY_SIMPLEX, 1,
+                                (0, 0, 255), 2)
+
+                    cv2.imshow('Webcam', img)
+                    if cv2.waitKey(1) & 0xFF == ord('q'):
+                        break
+
+
+
+
 
 
     cTime = time.time()
@@ -88,80 +210,15 @@ while True:
 
 
 
-print('mod switch loop finish')
-if fingers == [0, 1, 0, 0, 0]:
-    while True:
-        success, img = cap.read()
-
-
-        poseDetector.findPose(img)
-        lmList = poseDetector.findLandmark(img)
-        angle = poseDetector.findAngle(img, 11, 13, 15)
-
-        per = np.interp(angle, (90, 180), (0, 100))
-        if per == 100:
-            if dir == 0:
-                count += 0.5
-                dir = 1
-        if per == 0:
-            if dir == 1:
-                count += 0.5
-                dir = 0
-        cv2.putText(img, f'num:{int(count)}', (20, 70), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 0), 2)
-
-
-        cTime = time.time()
-        fps = 1/(cTime - pTime)
-        pTime = cTime
-        cv2.putText(img, f'FPS:{int(fps)}', (20, 40), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 0), 2)
-
-        cv2.putText(img, f'Weightlifting Mode Activated', (300, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-
-        cv2.imshow('Webcam', img)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-elif fingers == [0, 1, 1, 0, 0]:
-    while True:
-        success, img = cap.read()
-
-
-        poseDetector.findPose(img)
-        lmList = poseDetector.findLandmark(img)
-        angle = poseDetector.findAngle(img, 12, 14, 16)
-
-        per = np.interp(angle, (45, 180), (0, 100))
-        if per == 100:
-            if dir == 0:
-                count += 0.5
-                dir = 1
-        if per == 0:
-            if dir == 1:
-                count += 0.5
-                dir = 0
-        cv2.putText(img, f'num:{int(count)}', (20, 70), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 0), 2)
-
-
-        cTime = time.time()
-        fps = 1 / (cTime - pTime)
-        pTime = cTime
-        cv2.putText(img, f'FPS:{int(fps)}', (20, 40), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 0), 2)
-
-        cv2.putText(img, f'Standard push-ups Mode Activated', (300, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-
-        cv2.imshow('Webcam', img)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
-
-
 ###################################################################################################
 #------------------------------    Rectify Log    ------------------------------------------------#
 ###################################################################################################
 # v0  ---   construct a frame of mode switch method
 #     ---   rectify camera's fps to 60hz, size to 1280x720, solved webcam's view dark problem
 #
+# v1  ---   add music player function, allow using hand pose to play\skip\stop music.
 #
 #
 #
 #
-#
+
