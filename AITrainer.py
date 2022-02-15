@@ -19,7 +19,8 @@
 import cv2
 import time
 import numpy as np
-import MusicPlayer as mp
+import AnimationModule as AM
+import MusicPlayerModule as MPM
 import HandTrackingModule as HTM
 import PoseEstimationModule as PEM
 
@@ -31,9 +32,10 @@ cap.set(4, 720)
 cTime = 0
 pTime = 0
 
-mplayer = mp.Musicplayer()
+animation = AM.animation()
+mplayer = MPM.musicPlayer()
 handDetector = HTM.handDetector(detectionCon=0.7)
-poseDetector = PEM.PoseDetector()
+poseDetector = PEM.PoseDetector(detectionCon=0.65)
 
 
 fingerTop = [8, 12, 16, 20]
@@ -41,6 +43,7 @@ cnt1, cnt2, cnt3 = 0, 0, 0
 
 dir = 0
 count = 0
+
 
 while True:
     success, img = cap.read()
@@ -68,6 +71,7 @@ while True:
         if fingers == [0, 1, 0, 0, 0]:
             cnt1 = cnt1+1
             print(cnt1)
+            animation.ractangleP(cnt1, 0, 30, 0, 640, img)
             if cnt1 == 30:
                 cnt1 = 0
                 while True:
@@ -102,6 +106,7 @@ while True:
         elif fingers == [0, 1, 1, 0, 0]:
             cnt2 = cnt2+1
             print(cnt2)
+            animation.ractangleP(cnt2, 0, 30, 0, 640, img)
             if cnt2 == 30:
                 cnt2 = 0
                 while True:
@@ -135,6 +140,7 @@ while True:
                         break
         elif fingers == [1, 0, 0, 0, 0]:
             cnt3 = cnt3+1
+            animation.ractangleP(cnt3, 0, 30, 0, 640, img)
             if cnt3 == 30:
                 cnt3 = 0
                 while True:
@@ -159,18 +165,21 @@ while True:
 
                         if mfingers == [0,1,0,0,0]:
                             cnt1 = cnt1+1
+                            animation.ractangleV(cnt1, 0, 30, 0, 300, img)
                             if cnt1 == 30:
                                 cnt1 = 0
                                 mplayer.music_play()
                                 break
                         if mfingers == [0,1,1,0,0]:
                             cnt2 = cnt2+1
+                            animation.ractangleV(cnt2, 0, 30, 0, 300, img)
                             if cnt2 == 30:
                                 cnt2 = 0
-                                mplayer.pause_music()
+                                mplayer.skip_music()
                                 break
                         if mfingers == [0,1,1,1,0]:
                             cnt3 = cnt3+1
+                            animation.ractangleV(cnt3, 0, 30, 0, 300, img)
                             if cnt3 == 30:
                                 cnt3 = 0
                                 mplayer.stop_music()
@@ -210,15 +219,18 @@ while True:
 
 
 
+
+
 ###################################################################################################
 #------------------------------    Rectify Log    ------------------------------------------------#
 ###################################################################################################
 # v0  ---   construct a frame of mode switch method
 #     ---   rectify camera's fps to 60hz, size to 1280x720, solved webcam's view dark problem
 #
-# v1  ---   add music player function, allow using hand pose to play\skip\stop music.
+# v1  ---   add music player function, allow using hand pose to play\stop\pause music.
 #
 #
+# v2  ---   add animation, makes interface more acceptable.
 #
-#
+
 
