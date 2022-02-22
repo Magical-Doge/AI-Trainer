@@ -18,6 +18,7 @@
 
 import cv2
 import time
+import ABS
 import numpy as np
 import AnimationModule as AM
 import MusicPlayerModule as MPM
@@ -32,6 +33,7 @@ cap.set(4, 720)
 cTime = 0
 pTime = 0
 
+abs = ABS.Abs()
 animation = AM.animation()
 mplayer = MPM.musicPlayer()
 handDetector = HTM.handDetector(detectionCon=0.7)
@@ -39,6 +41,7 @@ poseDetector = PEM.PoseDetector(detectionCon=0.65)
 
 
 fingerTop = [8, 12, 16, 20]
+fingerTopReflect = [[0, 0, 0, 0, 0], [0, 1, 0, 0, 0], [0, 1, 1, 0, 0], [0, 1, 1, 1, 0]]
 cnt1, cnt2, cnt3 = 0, 0, 0
 
 dir = 0
@@ -68,17 +71,23 @@ while True:
 
         print(fingers)
 
-        if fingers == [0, 1, 0, 0, 0]:
+
+        cnt1 = abs.abs_goZero(cnt1,fingers, fingerTopReflect[1])
+        cnt2 = abs.abs_goZero(cnt2,fingers, fingerTopReflect[2])
+        cnt3 = abs.abs_goZero(cnt3,fingers, fingerTopReflect[3])
+
+        if fingers == fingerTopReflect[1]:
             cnt1 = cnt1+1
             print(cnt1)
             animation.ractangleP(cnt1, 0, 30, 0, 640, img)
             if cnt1 == 30:
                 cnt1 = 0
+                trg1 = 0
                 while True:
                     success, img = cap.read()
 
                     poseDetector.findPose(img)
-                    lmList = poseDetector.findLandmark(img)
+                    lmList = poseDetector.findLandmark(img, False)
                     angle = poseDetector.findAngle(img, 11, 13, 15)
 
                     per = np.interp(angle, (90, 180), (0, 100))
@@ -92,6 +101,10 @@ while True:
                             dir = 0
                     cv2.putText(img, f'num:{int(count)}', (20, 70), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 0), 2)
 
+
+                    trg1 = poseDetector.modeQuite()
+
+
                     cTime = time.time()
                     fps = 1 / (cTime - pTime)
                     pTime = cTime
@@ -101,19 +114,20 @@ while True:
                                 (0, 255, 0), 2)
 
                     cv2.imshow('Webcam', img)
-                    if cv2.waitKey(1) & 0xFF == ord('q'):
+                    if cv2.waitKey(1) & trg1:
                         break
-        elif fingers == [0, 1, 1, 0, 0]:
+        elif fingers == fingerTopReflect[2]:
             cnt2 = cnt2+1
             print(cnt2)
             animation.ractangleP(cnt2, 0, 30, 0, 640, img)
             if cnt2 == 30:
                 cnt2 = 0
+                trg2 = 0
                 while True:
                     success, img = cap.read()
 
                     poseDetector.findPose(img)
-                    lmList = poseDetector.findLandmark(img)
+                    lmList = poseDetector.findLandmark(img, False)
                     angle = poseDetector.findAngle(img, 12, 14, 16)
 
                     per = np.interp(angle, (45, 180), (0, 100))
@@ -127,6 +141,8 @@ while True:
                             dir = 0
                     cv2.putText(img, f'num:{int(count)}', (20, 70), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 0), 2)
 
+                    trg2 = poseDetector.modeQuite()
+
                     cTime = time.time()
                     fps = 1 / (cTime - pTime)
                     pTime = cTime
@@ -136,9 +152,9 @@ while True:
                                 (0, 255, 0), 2)
 
                     cv2.imshow('Webcam', img)
-                    if cv2.waitKey(1) & 0xFF == ord('q'):
+                    if cv2.waitKey(1) & trg2:
                         break
-        elif fingers == [1, 0, 0, 0, 0]:
+        elif fingers == fingerTopReflect[3]:
             cnt3 = cnt3+1
             animation.ractangleP(cnt3, 0, 30, 0, 640, img)
             if cnt3 == 30:
@@ -163,21 +179,25 @@ while True:
                             else:
                                 mfingers.append(0)
 
-                        if mfingers == [0,1,0,0,0]:
+                        cnt1 = abs.abs_goZero(cnt1, mfingers, fingerTopReflect[1])
+                        cnt2 = abs.abs_goZero(cnt2, mfingers, fingerTopReflect[2])
+                        cnt3 = abs.abs_goZero(cnt3, mfingers, fingerTopReflect[3])
+
+                        if mfingers == fingerTopReflect[1]:
                             cnt1 = cnt1+1
                             animation.ractangleV(cnt1, 0, 30, 0, 300, img)
                             if cnt1 == 30:
                                 cnt1 = 0
                                 mplayer.music_play()
                                 break
-                        if mfingers == [0,1,1,0,0]:
+                        if mfingers == fingerTopReflect[2]:
                             cnt2 = cnt2+1
                             animation.ractangleV(cnt2, 0, 30, 0, 300, img)
                             if cnt2 == 30:
                                 cnt2 = 0
                                 mplayer.skip_music()
                                 break
-                        if mfingers == [0,1,1,1,0]:
+                        if mfingers == fingerTopReflect[3]:
                             cnt3 = cnt3+1
                             animation.ractangleV(cnt3, 0, 30, 0, 300, img)
                             if cnt3 == 30:
@@ -210,13 +230,16 @@ while True:
     pTime = cTime
     cv2.putText(img, f'FPS:{int(fps)}', (20, 40), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 0), 2)
 
-    cv2.putText(img, f'Please select a mode, 1 is Weightlifting', (200, 200), cv2.FONT_HERSHEY_SIMPLEX,1,(0,0,255),2)
-    cv2.putText(img, f'                      2 is Standard push ups', (220, 230), cv2.FONT_HERSHEY_SIMPLEX,1,(0,0,255),2)
+    cv2.putText(img, f'Please select a mode, 1 is Weightlifting', (200, 200), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 69, 0), 2)
+    cv2.putText(img, f'                      2 is Standard push ups', (220, 230), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 69, 0), 2)
+    cv2.putText(img, f'                      3 is Music player Mode', (220, 260), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 69, 0), 2)
+
 
     cv2.imshow('Webcam', img)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
+print('loop finish')
 
 
 
@@ -232,5 +255,12 @@ while True:
 #
 # v2  ---   add animation, makes interface more acceptable.
 #
-
+#
+# v3  ---   add ABS module, optimize switch method.
+#
+#
+# v4  ---   optimize quite method
+#
+#
+#
 
