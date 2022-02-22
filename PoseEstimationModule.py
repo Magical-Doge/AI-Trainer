@@ -15,6 +15,10 @@
 #
 #
 # !! ATTENTION !! this code for learning and communication, follow MIT open source protocol
+#
+# update 22.2.22 @Magical-Doge
+#
+
 
 import cv2
 import mediapipe as mp
@@ -102,6 +106,18 @@ class PoseDetector():
             cv2.putText(img, f'Angle:{round(angle, 2)}', (x2+30,y2), cv2.FONT_HERSHEY_PLAIN, 2, (0,255,0),2)
 
         return angle
+    
+    
+    def modeQuite(self):
+    trigger = 0
+    x1, y1 = self.lmlist[15][1:]
+    x2, y2 = self.lmlist[16][1:]
+
+    if x1 in range(x2-30, x2+30):
+        if y1 in range(y2-60, y2+60):
+            trigger = 1
+    return trigger
+
 
 
 def main():
