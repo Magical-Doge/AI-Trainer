@@ -23,12 +23,15 @@ import numpy as np
 import AnimationModule as AM
 import MusicPlayerModule as MPM
 import HandTrackingModule as HTM
+import VolumeControlModule as VCM
 import PoseEstimationModule as PEM
 
 
-cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 cap.set(3, 1280)
 cap.set(4, 720)
+cap.set(10, 700)
+
 
 cTime = 0
 pTime = 0
@@ -36,6 +39,7 @@ pTime = 0
 abs = ABS.Abs()
 animation = AM.animation()
 mplayer = MPM.musicPlayer()
+vcontroler = VCM.VolumeControl()
 handDetector = HTM.handDetector(detectionCon=0.7)
 poseDetector = PEM.PoseDetector(detectionCon=0.65)
 
@@ -110,7 +114,7 @@ while True:
                     pTime = cTime
                     cv2.putText(img, f'FPS:{int(fps)}', (20, 40), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 0), 2)
 
-                    cv2.putText(img, f'Weightlifting Mode Activated', (300, 50), cv2.FONT_HERSHEY_SIMPLEX, 1,
+                    cv2.putText(img, f'Standard push ups Mode - Activated', (300, 50), cv2.FONT_HERSHEY_SIMPLEX, 1,
                                 (0, 255, 0), 2)
 
                     cv2.imshow('Webcam', img)
@@ -148,7 +152,7 @@ while True:
                     pTime = cTime
                     cv2.putText(img, f'FPS:{int(fps)}', (20, 40), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 0), 2)
 
-                    cv2.putText(img, f'Standard push-ups Mode Activated', (300, 50), cv2.FONT_HERSHEY_SIMPLEX, 1,
+                    cv2.putText(img, f'Weightlifting Mode - Activated', (300, 50), cv2.FONT_HERSHEY_SIMPLEX, 1,
                                 (0, 255, 0), 2)
 
                     cv2.imshow('Webcam', img)
@@ -179,6 +183,7 @@ while True:
                             else:
                                 mfingers.append(0)
 
+                        # -----cnt go zero(when u want to cancel the selection
                         cnt1 = abs.abs_goZero(cnt1, mfingers, fingerTopReflect[1])
                         cnt2 = abs.abs_goZero(cnt2, mfingers, fingerTopReflect[2])
                         cnt3 = abs.abs_goZero(cnt3, mfingers, fingerTopReflect[3])
@@ -195,7 +200,22 @@ while True:
                             animation.ractangleV(cnt2, 0, 30, 0, 300, img)
                             if cnt2 == 30:
                                 cnt2 = 0
-                                mplayer.skip_music()
+                                while True:
+                                    success, img = cap.read()
+
+                                    img, trg = vcontroler.drawCnL(img)
+
+                                    cTime = time.time()
+                                    fps = 1 / (cTime - pTime)
+                                    pTime = cTime
+
+                                    cv2.putText(img, f'FPS:{int(fps)}', (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 1,
+                                                (0, 0, 0), 2)
+
+                                    cv2.imshow('Webcam', img)
+
+                                    if cv2.waitKey(1) & trg:
+                                        break
                                 break
                         if mfingers == fingerTopReflect[3]:
                             cnt3 = cnt3+1
@@ -213,8 +233,16 @@ while True:
                     pTime = cTime
                     cv2.putText(img, f'FPS:{int(fps)}', (20, 40), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 0), 2)
 
-                    cv2.putText(img, f'Music player Mode', (300, 50), cv2.FONT_HERSHEY_SIMPLEX, 1,
+                    cv2.putText(img, f'Music player Mode - Activated', (300, 50), cv2.FONT_HERSHEY_SIMPLEX, 1,
                                 (0, 0, 255), 2)
+                    cv2.putText(img, f'- - -1 = play music- - -', (400, 80), cv2.FONT_HERSHEY_SIMPLEX, 1,
+                                (0, 0, 255), 2)
+                    cv2.putText(img, f'- - -2 = ctrl volume- - -', (400, 110), cv2.FONT_HERSHEY_SIMPLEX, 1,
+                                (0, 0, 255), 2)
+                    cv2.putText(img, f'- - -3 = stop music- - -', (400, 140), cv2.FONT_HERSHEY_SIMPLEX, 1,
+                                (0, 0, 255), 2)
+
+
 
                     cv2.imshow('Webcam', img)
                     if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -230,9 +258,9 @@ while True:
     pTime = cTime
     cv2.putText(img, f'FPS:{int(fps)}', (20, 40), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 0), 2)
 
-    cv2.putText(img, f'Please select a mode, 1 is Weightlifting', (200, 200), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 69, 0), 2)
-    cv2.putText(img, f'                      2 is Standard push ups', (220, 230), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 69, 0), 2)
-    cv2.putText(img, f'                      3 is Music player Mode', (220, 260), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 69, 0), 2)
+    cv2.putText(img, f'Please select a mode, 1 is Standard push ups', (200, 130), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 69, 255), 2)
+    cv2.putText(img, f'                      2 is Weightlifting', (220, 160), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 69, 255), 2)
+    cv2.putText(img, f'                      3 is Music player Mode', (220, 190), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 69, 255), 2)
 
 
     cv2.imshow('Webcam', img)
@@ -247,19 +275,23 @@ print('loop finish')
 ###################################################################################################
 #------------------------------    Rectify Log    ------------------------------------------------#
 ###################################################################################################
-# v0  ---   construct a frame of mode switch method
-#     ---   rectify camera's fps to 60hz, size to 1280x720, solved webcam's view dark problem
+# v0  ---(22.2.13)   construct a frame of mode switch method
+#     ---(22.2.14)   rectify camera's fps to 60hz, size to 1280x720, solved webcam's view dark problem
 #
-# v1  ---   add music player function, allow using hand pose to play\stop\pause music.
-#
-#
-# v2  ---   add animation, makes interface more acceptable.
+# v1  ---(22.2.15)   add music player function, allow using hand pose to play\stop\pause music.
 #
 #
-# v3  ---   add ABS module, optimize switch method.
+# v2  ---(22.2.16)   add animation, makes interface more acceptable.
 #
 #
-# v4  ---   optimize quite method
+# v3  ---(22.2.22)   add ABS module, optimize switch method.
+#
+#
+# v4  ---(22.2.22)   optimize quite method
+#
+#
+# v5  ---(22.2.24)   add volume control module
+#                    (ps: finally I've passed the cet6 today! bravo~~)
 #
 #
 #
