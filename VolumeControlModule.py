@@ -1,21 +1,20 @@
-# This is a project of volume control by hand. Learned from murtaza's workshop, code by TronCC(Personal)
+# @describe: This is a module of realtime detection of hand. Learned from @murtaza's workshop.
 #
-# you could import this file in to your any project, and Instantiate an object to use
+# @Author: Magical-Doge
 #
-# Environments require:
+# @Personal URL: Https://github.com/Magical-Doge, if you like plz pity me for a ★star!!
+#
+# @Environments require:
 #
 # Package               Version
 # --------------------- ---------
-# python                3,7
+# python                3.7.x
 # opencv-contrib-python 4.5.5.62
 # mediapipe             0.8.9.1
-# pico                  2.0.5
-# comtypes              1.1.10
-# pycaw                 20181226
 # numpy                 1.21.5
 #
 #
-# !! ATTENTION !!: this project for learning and communication only, Prohibition of commercial use.
+# !! ATTENTION !! this code for learning and communication, follow MIT open source protocol
 
 
 import cv2
