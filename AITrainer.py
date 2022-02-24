@@ -1,6 +1,6 @@
 # @describe: This is a project of AI trainer. Learned from @murtaza's workshop.
 #
-# @Author: Magical-Doge
+# @Author: Magical-Doge(魔法狗子)
 #
 # @Personal URL: Https://github.com/Magical-Doge, if you like plz pity me for a ★star!!
 #
